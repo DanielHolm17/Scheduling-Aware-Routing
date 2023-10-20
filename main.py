@@ -28,7 +28,7 @@ for node in nodes:
 # Load connections into matrix for entire timeframe
 for i in range(120):
     for node in nodes:
-        node.findNeighbourNodes(nodes, i)
+        node.find_neighbour_nodes(nodes, i)
         for neighbor in node.neighbours:
             adjacency_matrix[i][node.node_id][neighbor.node_id] = 1
             adjacency_matrix[i][neighbor.node_id][node.node_id] = 1  # Since it's an undirected graph
@@ -40,7 +40,7 @@ def find_node_by_id(node_id, nodes):
             return node
     return None  # Node not found
 
-### Flere processer kører på en gang - Hvis to skal starte på samme tid er det kun den ene der starter
+### Flere processer kører på en gang - Hvis to skal starte på samme tid er det kun den ene der starter - Fikset med timeout(0)
 ### Skal jeg måske have threads? 
 ### Hvad hvis en node er involveret i flere transmissions på samme tid? 
 

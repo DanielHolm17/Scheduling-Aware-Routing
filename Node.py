@@ -13,7 +13,7 @@ class Node:
         self.transmission_time = 0
 
     def send_packet(self, path, transmission_time):
-        yield self.env.timeout(1) # Simulate transmission    
+        yield self.env.timeout(0) # Simulate transmission    
         transmission_time += 1
 
         next_index = path.index(self.node_id)+1
@@ -22,7 +22,7 @@ class Node:
         self.env.process(self.nodes[path[next_index]]._receive_packet(path, transmission_time))
         
     def _receive_packet(self, path, transmission_time):
-        yield self.env.timeout(1) # Process received packet 
+        yield self.env.timeout(0) # Process received packet 
         transmission_time += 1
 
         if (self.node_id == path[-1]):
