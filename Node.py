@@ -19,9 +19,9 @@ class Node:
         next_index = path.index(self.node_id)+1
 
         print(f"Sending packet from node {self.node_id} to node {path[next_index]}")
-        self.env.process(self.nodes[path[next_index]]._receive_packet(path, transmission_time))
+        self.env.process(self.nodes[path[next_index]].receive_packet(path, transmission_time))
         
-    def _receive_packet(self, path, transmission_time):
+    def receive_packet(self, path, transmission_time):
         yield self.env.timeout(0) # Process received packet 
         transmission_time += 1
 
@@ -34,7 +34,7 @@ class Node:
     def set_all_nodes(self, nodes):
         self.nodes = nodes
 
-    def _get_position_at_time(self, time_index: int):
+    def get_position_at_time(self, time_index: int):
         series_str = self.position[time_index]
         parts = series_str.split()
         # Check if there are at least two parts (numbers) in the string
@@ -45,18 +45,18 @@ class Node:
             print("Not enough numbers in the string to create a tuple")  
         return tuple_with_two_numbers   
     
-    def _is_neighbour_in_LOS(self, time_index, neighbour):
+    def is_neighbour_in_LOS(self, time_index, neighbour):
         """ Assumes an altitude of 718km """
 
-        self_coordinates = self._get_position_at_time(time_index)
+        self_coordinates = self.get_position_at_time(time_index)
         self_lat = self_coordinates[0]
         self_lon = self_coordinates[1]
 
-        neighbour_coordinates = neighbour._get_position_at_time(time_index)
+        neighbour_coordinates = neighbour.get_position_at_time(time_index)
         neighbour_lat = neighbour_coordinates[0]
         neighbour_lon = neighbour_coordinates[1]
 
-        if (distance.distance(self_lat, self_lon, neighbour_lat, neighbour_lon) < 5000):
+        if (distance.distance(self_lat, self_lon, neighbour_lat, neighbour_lon) < 6000):
             return True
         
         return False
@@ -66,7 +66,7 @@ class Node:
         list = []
         for node in nodes:
             if (node is not self):
-                if (self._is_neighbour_in_LOS(time_index, node)):
+                if (self.is_neighbour_in_LOS(time_index, node)):
                     list.append(node)
 
         self.neighbours = list
