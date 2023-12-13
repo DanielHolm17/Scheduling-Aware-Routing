@@ -13,7 +13,7 @@ def dijkstra(graph, start, end):
     
     while priority_queue:
         current_distance, current_node = heapq.heappop(priority_queue)
-        print(f"Searched nodes {current_node}")
+        #print(f"Searched nodes {current_node}")
         
         # If we have reached the end node, we have found the shortest path
         if current_node == end:

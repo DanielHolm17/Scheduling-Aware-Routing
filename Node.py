@@ -3,6 +3,7 @@ import random
 from tabulate import tabulate
 from math import acos, sin, cos
 import distance
+import numpy as np
 
 class Node:
     def __init__(self, env, node_id: int, position = None):
@@ -12,24 +13,36 @@ class Node:
         self.nodes = []
         self.transmission_time = 0
 
-    def send_packet(self, path, transmission_time):
-        yield self.env.timeout(0) # Simulate transmission    
+    def send_packet(self, path, transmission_time, ETX_values):
+        yield self.env.timeout(1) # Simulate transmission    
         transmission_time += 1
-
         next_index = path.index(self.node_id)+1
-
         print(f"Sending packet from node {self.node_id} to node {path[next_index]}")
-        self.env.process(self.nodes[path[next_index]].receive_packet(path, transmission_time))
+
+        # Simulate retransmission
+        retransmit = 1
+        while retransmit:
+            if (next_index == 1):
+                probablity = ETX_values[next_index-1] - 1
+            else:
+                probablity = ETX_values[next_index-1] - ETX_values[next_index-2] - 1
+            retransmit = 1 if random.random() < probablity else 0
+            if retransmit:
+                yield self.env.timeout(1)
+                transmission_time += 1
+                print("Retransmission")
+
+        self.env.process(self.nodes[path[next_index]].receive_packet(path, transmission_time, ETX_values))
         
-    def receive_packet(self, path, transmission_time):
-        yield self.env.timeout(0) # Process received packet 
+    def receive_packet(self, path, transmission_time, ETX_values):
+        yield self.env.timeout(1) # Process received packet 
         transmission_time += 1
 
         if (self.node_id == path[-1]):
             print(f"Transmission complete - time: {transmission_time}")
             return
         else:
-            self.env.process(self.send_packet(path, transmission_time))
+            self.env.process(self.send_packet(path, transmission_time, ETX_values))
 
     def set_all_nodes(self, nodes):
         self.nodes = nodes
@@ -56,7 +69,7 @@ class Node:
         neighbour_lat = neighbour_coordinates[0]
         neighbour_lon = neighbour_coordinates[1]
 
-        if (distance.distance(self_lat, self_lon, neighbour_lat, neighbour_lon) < 6000):
+        if (distance.distance(self_lat, self_lon, neighbour_lat, neighbour_lon) < 5550):
             return True
         
         return False
