@@ -11,38 +11,38 @@ class Node:
         self.node_id = node_id
         self.position = position
         self.nodes = []
-        self.transmission_time = 0
 
-    def send_packet(self, path, transmission_time, ETX_values):
-        yield self.env.timeout(1) # Simulate transmission    
-        transmission_time += 1
+    def send_packet(self, path, ETX_values):
+        yield self.env.timeout(0.01) # Simulate transmission    
         next_index = path.index(self.node_id)+1
         print(f"Sending packet from node {self.node_id} to node {path[next_index]}")
 
         # Simulate retransmission
+        num_of_retranmission = 0
         retransmit = 1
         while retransmit:
             if (next_index == 1):
-                probablity = ETX_values[next_index-1] - 1
+                probablity = 1/ETX_values[next_index-1]
             else:
-                probablity = ETX_values[next_index-1] - ETX_values[next_index-2] - 1
-            retransmit = 1 if random.random() < probablity else 0
+                probablity = 1/(abs(ETX_values[next_index-1] - ETX_values[next_index-2]))
+
+            retransmit = 0 if random.random() < probablity else 1
             if retransmit:
-                yield self.env.timeout(1)
-                transmission_time += 1
+                yield self.env.timeout(0.02)
                 print("Retransmission")
+                num_of_retranmission += 1
 
-        self.env.process(self.nodes[path[next_index]].receive_packet(path, transmission_time, ETX_values))
+        print(f"Number of retransmissions: {num_of_retranmission}")
+        yield self.env.process(self.nodes[path[next_index]].receive_packet(path, ETX_values))
         
-    def receive_packet(self, path, transmission_time, ETX_values):
-        yield self.env.timeout(1) # Process received packet 
-        transmission_time += 1
-
+    def receive_packet(self, path, ETX_values):
+        yield self.env.timeout(0.01) # Process received packet 
+        
         if (self.node_id == path[-1]):
-            print(f"Transmission complete - time: {transmission_time}")
+            print(f"Transmission complete")
             return
         else:
-            self.env.process(self.send_packet(path, transmission_time, ETX_values))
+            yield self.env.process(self.send_packet(path, ETX_values))
 
     def set_all_nodes(self, nodes):
         self.nodes = nodes
