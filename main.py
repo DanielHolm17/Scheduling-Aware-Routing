@@ -121,11 +121,8 @@ def network_simulator(env, nodes):
                 
                 change_adjacency_matrix(53, 52, 0.1)
                 old_ETX_3 = distance[3]-distance[2]
-                #old_ETX_4 = distance[4]-distance[3]
-
                 distance[2] = 100+distance[1]
                 distance[3] = distance[2] + old_ETX_3
-                #distance[4] = distance[3] + old_ETX_4
                 print(f"New ETX values: {distance}")
                 yield env.process(nodes[start_node_id].send_packet(shortest_path, distance))
                 print(f"Time for transmission: {env.now-start_time}")
