@@ -55,7 +55,7 @@ def change_adjacency_matrix(node1_id : int, node2_id : int, packet_delivery_prob
 # Create environment
 env = simpy.Environment()
 num_nodes = 66
-run_time = 100
+run_time = 200
 sample_time = 1
 
 # Create ZRP nodes to get the same ETX values
@@ -72,7 +72,7 @@ for node in nodes:
     node.set_all_nodes(nodes)
 
 # Initialize an empty adjacency matrix
-adjacency_matrix = [np.zeros((num_nodes, num_nodes)) for _ in range(120)]
+adjacency_matrix = [np.zeros((num_nodes, num_nodes)) for _ in range(run_time)]
 
 
 def IARP_process(env):
@@ -92,7 +92,7 @@ def IARP_process(env):
             node.metrics_table = sort_table(node.metrics_table)
 
 def network_simulator(env, nodes):
-    #planned_tranmission = pt.generate_planned_transmission()7, 
+    #planned_tranmission = pt.generate_planned_transmission(), 
     planned_tranmission = [(44, 19, 0)]
 
     yield env.process(IARP_process(env))        # Create routing table for node
@@ -101,8 +101,8 @@ def network_simulator(env, nodes):
     df = pd.DataFrame(adjacency_matrix[0])
     df.to_excel('adjacency_matrix_0.xlsx')
 
-    #print(adjacency_matrix[0])
-    #print(f"Adjacency matrix size: {sys.getsizeof(adjacency_matrix[0])} bytes")
+    print(adjacency_matrix[0])
+    print(f"Adjacency matrix size: {sys.getsizeof(adjacency_matrix[0])} bytes")
 
     for i in range(run_time):
         for tranmission in planned_tranmission:
@@ -119,13 +119,13 @@ def network_simulator(env, nodes):
 
                 planned_tranmission.pop(planned_tranmission.index(tranmission))
                 
-                change_adjacency_matrix(63, 64, 0.1)
+                change_adjacency_matrix(53, 52, 0.1)
                 old_ETX_3 = distance[3]-distance[2]
-                old_ETX_4 = distance[4]-distance[3]
+                #old_ETX_4 = distance[4]-distance[3]
 
                 distance[2] = 100+distance[1]
                 distance[3] = distance[2] + old_ETX_3
-                distance[4] = distance[3] + old_ETX_4
+                #distance[4] = distance[3] + old_ETX_4
                 print(f"New ETX values: {distance}")
                 yield env.process(nodes[start_node_id].send_packet(shortest_path, distance))
                 print(f"Time for transmission: {env.now-start_time}")
