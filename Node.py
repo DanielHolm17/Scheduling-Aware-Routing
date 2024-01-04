@@ -1,9 +1,7 @@
 import simpy
 import random
-from tabulate import tabulate
-from math import acos, sin, cos, sqrt
+from math import  sqrt
 import distance
-import numpy as np
 
 KM_FACTOR = 0.001
 
@@ -34,7 +32,7 @@ class Node:
                 print("Retransmission")
                 num_of_retranmission += 1
 
-        print(f"Number of retransmissions: {num_of_retranmission}")
+        print(f"\nNumber of retransmissions: {num_of_retranmission}")
         yield self.env.process(self.nodes[path[next_index]].receive_packet(path, ETX_values))
         
     def receive_packet(self, path, ETX_values):

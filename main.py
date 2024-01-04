@@ -1,8 +1,6 @@
 import numpy as np
 import sys
 import simpy
-import pandas as pd
-from scipy.stats import halfnorm
 
 import LoadData
 import dijkstras_algorithm as dij
@@ -42,32 +40,35 @@ def generate_adjacency_matrix():
         for node in nodes:
             node.find_neighbour_nodes(nodes,i)
             for neighbor in node.neighbours:
-                #if (adjacency_matrix[i][node.node_id][neighbor.node_id] != 0):     # Already data here 
-                #    continue
+                if (adjacency_matrix[i][node.node_id][neighbor.node_id] != 0):     # Already data here 
+                    continue
 
                 random_value = get_ETX_from_ZRP_nodes(node.node_id, neighbor.node_id)         
                 adjacency_matrix[i][node.node_id][neighbor.node_id] = random_value
-                #adjacency_matrix[i][neighbor.node_id][node.node_id] = random_value # Since it's an undirected graph
+                adjacency_matrix[i][neighbor.node_id][node.node_id] = random_value
 
-def change_adjacency_matrix(node1_id : int, node2_id : int, packet_delivery_prob : float):
-    adjacency_matrix[0][node1_id][node2_id] = packet_delivery_prob
+def ETX_for_route_changed(old_ETX: []):
+    old_ETX[-1] = 100 + old_ETX[-1]
+    print(f"New ETX values: {old_ETX}")
+    return old_ETX
 
-# Create environment
+
+######## Create environment ###########
+
 env = simpy.Environment()
 num_nodes = 66
 run_time = 200
-sample_time = 1
 
 # Create ZRP nodes to get the same ETX values
 zrp_nodes = []
 zone_radius = 1
 for i in range(num_nodes):
-    zrp_nodes.append(Node_zrp.Node(env, i, zone_radius, position=LoadData.get_position_data(i)))
+    zrp_nodes.append(Node_zrp.Node(env, i, zone_radius, position=LoadData.get_position_data(i, num_nodes)))
 
 # Create nodes
 nodes = []
 for i in range(num_nodes):
-    nodes.append(Node.Node(env, i, position=LoadData.get_position_data(i)))
+    nodes.append(Node.Node(env, i, position=LoadData.get_position_data(i, num_nodes)))
 for node in nodes:
     node.set_all_nodes(nodes)
 
@@ -75,12 +76,13 @@ for node in nodes:
 adjacency_matrix = [np.zeros((num_nodes, num_nodes)) for _ in range(run_time)]
 
 
+######## Processes ###########
+
 def IARP_process(env):
     np.random.seed(41)
     find_node_neighbours(zrp_nodes, 0)
     
     for node in zrp_nodes:
-            packet_count = 0
             node.routing_table_new.clear()
             node.metrics_table_new.clear()
             node.paths_to_destinations.clear()
@@ -98,33 +100,24 @@ def network_simulator(env, nodes):
     yield env.process(IARP_process(env))        # Create routing table for node
     generate_adjacency_matrix()                 # Create adjacency matrix
 
-    df = pd.DataFrame(adjacency_matrix[0])
-    df.to_excel('adjacency_matrix_0.xlsx')
-
-    print(adjacency_matrix[0])
-    print(f"Adjacency matrix size: {sys.getsizeof(adjacency_matrix[0])} bytes")
-
     for i in range(run_time):
         for tranmission in planned_tranmission:
             start_node_id, end_node_id, start_time = tranmission
 
             if (start_time < env.now):
-                shortest_path, distance = dij.dijkstra(adjacency_matrix[start_time], start_node_id, end_node_id)
+                shortest_path, ETX = dij.dijkstra(adjacency_matrix[start_time], start_node_id, end_node_id)
 
                 if shortest_path:
-                    print(f"Best path from node {start_node_id} to node {end_node_id}: {shortest_path} - ETX: {distance[-1]}")
-                    print(distance)
+                    print(f"Best path from node {start_node_id} to node {end_node_id}: {shortest_path} - ETX: {ETX[-1]}")
+                    print(f"ETX: {ETX}")
                 else:
                     print(f"There is no path from node {start_node_id} to node {end_node_id}.")                
 
                 planned_tranmission.pop(planned_tranmission.index(tranmission))
                 
-                change_adjacency_matrix(53, 52, 0.1)
-                old_ETX_3 = distance[3]-distance[2]
-                distance[2] = 100+distance[1]
-                distance[3] = distance[2] + old_ETX_3
-                print(f"New ETX values: {distance}")
-                yield env.process(nodes[start_node_id].send_packet(shortest_path, distance))
+                # ETX changed and send packet along route. 
+                new_ETX = ETX_for_route_changed(ETX)
+                yield env.process(nodes[start_node_id].send_packet(shortest_path, new_ETX))
                 print(f"Time for transmission: {env.now-start_time}")
 
         yield env.timeout(0.01)

@@ -346,7 +346,7 @@ class Node:
         neighbour_lon = neighbour_coordinates[1] * KM_FACTOR
         neighbour_alt = neighbour_coordinates[2] * KM_FACTOR
 
-        if (distance.distance(self_lat, self_lon, self_alt, neighbour_lat, neighbour_lon, neighbour_alt) < 5550):
+        if (distance.distance(self_lat, self_lon, self_alt, neighbour_lat, neighbour_lon, neighbour_alt) < 5717.5):
             return True
         
         return False
