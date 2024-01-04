@@ -2,8 +2,8 @@
 Python implementation for Scheduling Aware Routing for a satellite network. 
 
 ## Nodes 
-The code consist of two classes called Node and Node_zrp. The Node_zrp is only there to get the same ETX values as used in ZRP, and is a copy from the ZRP repository here: https://github.com/mathias-magnusson/Zone-routing-protocol
-The Node class consists of all the nodes in the network and is created in main. The num_nodes variable is used to changed the node population to: 66, 132, 264, 396, or 528.
+The code consist of two classes called Node and Node_zrp. The Node_zrp is only there to get the same ETX values as used in ZRP, and is a copy from the ZRP repository: https://github.com/mathias-magnusson/Zone-routing-protocol
+The Node class consists of all the nodes in the network and is created in main. The num_nodes variable is used to change the node population to: 66, 132, 264, 396, or 528.
 
 The nodes are capable of sending and receiving packets, and can simulate retransmissions based on the ETX values given.
 
